@@ -97,3 +97,22 @@ sledeće. Vodi se od prvog dana, da se odluke ne izgube.
     iz konzole).
 - Sledeće: napraviti nalog kurira u konzoli, isključiti samostalno pravljenje
   naloga, probati prijavu na telefonu, pa stegnuti pravila.
+
+## 2026-09-11 — Faza 2, četvrti korak: stegnuta pravila baze
+
+- Urađeno:
+  - U konzoli napravljen nalog kurira i isključeno samostalno pravljenje
+    naloga (Authentication → Settings → User actions).
+  - `firestore.rules`: čita i piše samo prijavljen korisnik; privremeni rok
+    10.10.2026. uklonjen. Pravila postavljena (`firebase deploy`).
+  - `tools/seed_firestore.py` se sad prijavljuje (pita mejl i lozinku, lozinka
+    se ne prikazuje i ne čuva) i šalje token uz svaki upis.
+  - `CLAUDE.md` ažuriran: prijava, pravila i zašto je pravljenje naloga
+    isključeno.
+- Provereno: prijava na pravoj aplikaciji (Windows) radi i porudžbine se vide;
+  čitanje baze bez prijave vraća grešku 403; nova pravila prošla proveru
+  sintakse; skripta prošla proveru sintakse (nije pokretana, jer traži
+  lozinku).
+- Otvoreni problemi: repozitorijum je i dalje privatan — razlog za to više ne
+  važi, odluka o javnom je na korisniku.
+- Sledeće: push notifikacija za novu porudžbinu (Firebase Cloud Messaging).

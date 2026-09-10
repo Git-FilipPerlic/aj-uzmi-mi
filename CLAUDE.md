@@ -235,9 +235,9 @@ jer ga vide mušterije; „Dispečer" ostaje interni naziv sistema.
 ### Gde stoji kod
 
 Kod je u privatnom GitHub repozitorijumu
-`https://github.com/Git-FilipPerlic/aj-uzmi-mi`. **Privatan je namerno**, jer
-su pravila pristupa bazi privremeno otvorena (vidi dole) — u javni prelazi tek
-kad se doda prijava i pravila se stegnu.
+`https://github.com/Git-FilipPerlic/aj-uzmi-mi`. Bio je privatan jer su
+pravila baze bila otvorena; od 11.09.2026. su stegnuta, pa taj razlog više ne
+važi — da li prelazi u javni, odlučuje korisnik.
 
 `firebase_options.dart` i `google-services.json` **jesu** u repozitorijumu, i
 tako treba: bez njih se projekat ne može pokrenuti na drugom računaru, a ti
@@ -254,11 +254,17 @@ lista radi i kad nestane signal.
 
 Za probu je u bazi pet izmišljenih porudžbina; ubacuje ih
 `tools/seed_firestore.py` (bez ijednog dodatnog paketa, preko Firestore REST
-API-ja).
+API-ja). Skripta traži mejl i lozinku kurira, jer baza pušta samo prijavljene.
 
-**Pravila baze su privremeno otvorena do 10.10.2026.** (`firestore.rules`).
-Rok je osigurač: ako se zaboravi, baza se sama zaključa. Ako aplikacija
-odjednom javi „Nema veze sa bazom", prvo proveriti da li je rok istekao.
+**Prijava (11.09.2026.):** kurir se prijavljuje mejlom i lozinkom (Firebase
+Authentication). U aplikaciji **nema registracije**, a u Firebase konzoli je
+**isključeno samostalno pravljenje naloga** (Authentication → Settings → User
+actions). Nalozi se prave samo ručno u konzoli (Authentication → Users → Add
+user). Razlog: javni ključ aplikacije može svako da izvuče, pa bi bez toga bilo
+ko mogao sebi da napravi nalog i čita porudžbine.
 
-Ostalo za Fazu 2: prijava mejlom i lozinkom, stezanje pravila baze na „samo
-prijavljen kurir", i push notifikacija za novu porudžbinu.
+**Pravila baze** (`firestore.rules`): čita i piše samo prijavljen korisnik.
+To znači „samo kurir" isključivo zato što je samostalno pravljenje naloga
+isključeno — **ne uključivati ga ponovo** bez promene pravila.
+
+Ostalo za Fazu 2: push notifikacija za novu porudžbinu.

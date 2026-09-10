@@ -6,14 +6,16 @@
 #     python tools/seed_firestore.py
 #
 # Skripta ne traži nijedan dodatni paket; koristi Firestore REST API i ključ
-# koji već stoji u app/lib/firebase_options.dart. Radi samo dok su pravila
-# baze otvorena (vidi firestore.rules) — čim se doda prijava, prestaje da radi
-# i porudžbine se unose kroz aplikaciju ili backend.
+# koji već stoji u app/lib/firebase_options.dart. Pravila baze puštaju samo
+# prijavljenog kurira, pa se skripta na početku prijavljuje istim mejlom i
+# lozinkom kao u aplikaciji (lozinka se ne prikazuje dok se kuca i ne čuva se).
 
+import getpass
 import io
 import json
 import os
 import re
+import urllib.error
 import urllib.request
 from datetime import datetime, timedelta, timezone
 
@@ -30,6 +32,32 @@ def procitaj_kljuc():
     if not nadjeno:
         raise SystemExit("Nije pronađen apiKey u firebase_options.dart")
     return nadjeno.group(1)
+
+
+def prijavi_se(kljuc):
+    """Prijavljuje kurira i vraća token koji Firestore traži uz svaki upis."""
+    mejl = input("Mejl kurira: ").strip()
+    lozinka = getpass.getpass("Lozinka: ")
+    if not mejl or not lozinka:
+        raise SystemExit("Mejl i lozinka moraju biti uneti.")
+
+    zahtev = urllib.request.Request(
+        "https://identitytoolkit.googleapis.com/v1/"
+        f"accounts:signInWithPassword?key={kljuc}",
+        data=json.dumps(
+            {"email": mejl, "password": lozinka, "returnSecureToken": True}
+        ).encode("utf-8"),
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(zahtev) as odgovor:
+            return json.loads(odgovor.read())["idToken"]
+    except urllib.error.HTTPError as greska:
+        poruka = greska.read().decode("utf-8", "replace")
+        if "INVALID_LOGIN_CREDENTIALS" in poruka:
+            raise SystemExit("Pogrešan mejl ili lozinka.")
+        raise SystemExit(f"Prijava nije uspela ({greska.code}): {poruka}")
 
 
 def tekst(v):
@@ -67,6 +95,7 @@ def porudzbina(ime, kontakt, kanal, artikli, adresa, hitnost, cena, status, mest
 
 def main():
     kljuc = procitaj_kljuc()
+    token = prijavi_se(kljuc)
     sada = datetime.now(timezone.utc)
 
     porudzbine = {
@@ -106,7 +135,10 @@ def main():
         zahtev = urllib.request.Request(
             adresa,
             data=json.dumps(telo).encode("utf-8"),
-            headers={"Content-Type": "application/json"},
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {token}",
+            },
             method="POST",
         )
         try:
