@@ -232,10 +232,33 @@ jer ga vide mušterije; „Dispečer" ostaje interni naziv sistema.
   da aplikacija za mušterije kasnije bude `rs.ajuzmimi.app`.
 - Naziv ispod ikonice na telefonu: **Aj uzmi mi**
 
+### Gde stoji kod
+
+Kod je u privatnom GitHub repozitorijumu
+`https://github.com/Git-FilipPerlic/aj-uzmi-mi`. **Privatan je namerno**, jer
+su pravila pristupa bazi privremeno otvorena (vidi dole) — u javni prelazi tek
+kad se doda prijava i pravila se stegnu.
+
+`firebase_options.dart` i `google-services.json` **jesu** u repozitorijumu, i
+tako treba: bez njih se projekat ne može pokrenuti na drugom računaru, a ti
+ključevi nisu tajna — svako ih može izvući iz instalirane aplikacije. Bazu
+čuvaju pravila pristupa, ne skrivanje ključeva.
+
 ### Stanje aplikacije (`app/`)
 
 Gotovo: lista porudžbina, detalji sa dugmadima „Preuzeto" i „Dostavljeno",
-predložena ruta po polju `routeOrder`.
+predložena ruta po polju `routeOrder`, i **živa veza sa Firestore bazom** —
+`FirestoreOrderStore` sluša kolekciju `orders` neprekidno, pa se promena vidi
+odmah, bez osvežavanja. Firestore usput čuva kopiju podataka na telefonu, pa
+lista radi i kad nestane signal.
 
-Ostalo za Fazu 2: Firebase projekat, Firestore umesto test podataka, prijava
-mejlom i lozinkom, push notifikacija za novu porudžbinu.
+Za probu je u bazi pet izmišljenih porudžbina; ubacuje ih
+`tools/seed_firestore.py` (bez ijednog dodatnog paketa, preko Firestore REST
+API-ja).
+
+**Pravila baze su privremeno otvorena do 10.10.2026.** (`firestore.rules`).
+Rok je osigurač: ako se zaboravi, baza se sama zaključa. Ako aplikacija
+odjednom javi „Nema veze sa bazom", prvo proveriti da li je rok istekao.
+
+Ostalo za Fazu 2: prijava mejlom i lozinkom, stezanje pravila baze na „samo
+prijavljen kurir", i push notifikacija za novu porudžbinu.

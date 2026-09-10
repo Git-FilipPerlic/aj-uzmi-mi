@@ -37,3 +37,32 @@ sledeće. Vodi se od prvog dana, da se odluke ne izgube.
   (namerno: rutu računa backend).
 - Sledeće: Firebase — kreirati projekat, dodati Firestore i prijavu, pa
   zameniti test podatke pravom bazom.
+
+## 2026-09-10 — Faza 2, drugi korak: prava baza (Firestore) i git
+
+- Urađeno:
+  - Usluga dobila ime **„Aj uzmi mi"**; Firebase projekat `aj-uzmi-mi`,
+    Android package `rs.ajuzmimi.kurir`.
+  - Dodata dva paketa: `firebase_core` i `cloud_firestore`. FlutterFire je
+    registrovao Android i Windows aplikaciju i napravio `firebase_options.dart`.
+  - `FirestoreOrderStore` sluša kolekciju `orders` neprekidno; dugmad
+    „Preuzeto"/„Dostavljeno" upisuju status u bazu. Memorijski `OrderStore`
+    ostaje kao osnova i koristi se u testovima.
+  - Ekrani dobili stanja „Učitavanje" i „Nema veze sa bazom", da se nikad ne
+    vidi prazan beli ekran.
+  - Napravljena Firestore baza u regionu `europe-west3` (Frankfurt) i
+    postavljena pravila iz `firestore.rules`.
+  - `tools/seed_firestore.py` ubacuje pet probnih porudžbina u bazu bez ijednog
+    dodatnog paketa (Firestore REST API + ključ iz `firebase_options.dart`).
+  - Napravljen **privatan** GitHub repozitorijum
+    `https://github.com/Git-FilipPerlic/aj-uzmi-mi` i poslat ceo projekat.
+- Provereno: `flutter analyze` bez primedbi; `flutter test` — 9 testova
+  prolazi; pet porudžbina vidljivo u bazi preko REST API-ja.
+- Otvoreni problemi:
+  - **Pravila baze su privremeno otvorena do 10.10.2026.** Repozitorijum je
+    zato privatan; u javni ide tek kad se doda prijava i pravila se stegnu na
+    „samo prijavljen kurir".
+  - Prvi upis u bazu je pao sa greškom 403 zato što se nova pravila nisu još
+    raširila; drugi pokušaj minut kasnije je prošao. Normalno ponašanje.
+- Sledeće: prijava (Firebase Authentication, mejl i lozinka), pa stezanje
+  pravila, pa push notifikacije za nove porudžbine.
