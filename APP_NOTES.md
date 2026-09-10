@@ -66,3 +66,34 @@ sledeće. Vodi se od prvog dana, da se odluke ne izgube.
     raširila; drugi pokušaj minut kasnije je prošao. Normalno ponašanje.
 - Sledeće: prijava (Firebase Authentication, mejl i lozinka), pa stezanje
   pravila, pa push notifikacije za nove porudžbine.
+
+## 2026-09-11 — Faza 2, treći korak: prijava kurira
+
+- Urađeno:
+  - Dodat paket `firebase_auth`.
+  - `lib/data/auth.dart` — osnovna klasa `Auth` (prijava u memoriji, za
+    testove); `lib/data/firebase_auth_service.dart` — prava prijava preko
+    Firebase-a, sa greškama prevedenim na običan srpski.
+  - `lib/screens/login_screen.dart` — ekran „Prijava kurira" (mejl, lozinka,
+    dugme za prikaz lozinke). Nema registracije u aplikaciji: nalog se pravi
+    ručno u Firebase konzoli, da niko ne može sam sebi da napravi nalog.
+  - Porudžbine se otvaraju tek posle prijave i zatvaraju pri odjavi. Dugme za
+    odjavu u gornjem desnom uglu traži potvrdu (da se ne pritisne slučajno u
+    vožnji).
+  - Firebase pamti prijavu na telefonu — kurir kuca lozinku samo jednom.
+- Provereno: `flutter analyze` bez primedbi; `flutter test` — 14 testova
+  prolazi (5 novih: prazna polja pri prijavi, prijava/odjava, prelaz sa ekrana
+  za prijavu na porudžbine i nazad). Prijava mejlom i lozinkom je uključena u
+  Firebase projektu (proveren odgovor servera).
+- Otvoreni problemi:
+  - Pravila baze su i dalje otvorena — stežu se kad nalog kurira postoji i
+    prijava proradi na pravom telefonu.
+  - Firebase po defaultu dozvoljava da **bilo ko napravi nalog** preko
+    javnog API ključa, i bez aplikacije. Pre stezanja pravila isključiti to u
+    konzoli (Authentication → Settings → User actions → „Enable create"),
+    inače „samo prijavljen" ne znači „samo kurir".
+  - `tools/seed_firestore.py` se ne prijavljuje, pa će posle stezanja pravila
+    dobijati grešku 403. Treba ga naučiti da se prijavi (ili ubacivati podatke
+    iz konzole).
+- Sledeće: napraviti nalog kurira u konzoli, isključiti samostalno pravljenje
+  naloga, probati prijavu na telefonu, pa stegnuti pravila.

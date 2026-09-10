@@ -1,9 +1,12 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
+import 'data/auth.dart';
+import 'data/firebase_auth_service.dart';
 import 'data/firestore_order_store.dart';
 import 'data/order_store.dart';
 import 'firebase_options.dart';
+import 'screens/login_screen.dart';
 import 'screens/orders_screen.dart';
 import 'screens/route_screen.dart';
 import 'widgets/message_view.dart';
@@ -22,26 +25,60 @@ Future<void> main() async {
     return;
   }
 
-  runApp(DispecerApp(store: FirestoreOrderStore()));
+  runApp(
+    DispecerApp(
+      auth: FirebaseAuthService(),
+      createStore: () => FirestoreOrderStore(),
+    ),
+  );
 }
 
 /// Kurirska aplikacija „Aj uzmi mi" (Faza 2).
 ///
-/// Porudžbine dobija preko `store`-a: u pravoj aplikaciji je to Firestore, a u
-/// testovima memorijska verzija sa test podacima.
+/// Dok kurir nije prijavljen, prikazuje se ekran za prijavu. Porudžbine se
+/// otvaraju tek posle prijave i zatvaraju čim se kurir odjavi — namerno, jer
+/// pravila baze traže prijavljenog korisnika, pa čitanje bez prijave ionako ne
+/// bi prošlo.
 class DispecerApp extends StatefulWidget {
-  const DispecerApp({super.key, required this.store});
+  const DispecerApp({super.key, required this.auth, required this.createStore});
 
-  final OrderStore store;
+  final Auth auth;
+
+  /// Pravi držač porudžbina: u pravoj aplikaciji Firestore, u testovima
+  /// memorijska verzija sa test podacima.
+  final OrderStore Function() createStore;
 
   @override
   State<DispecerApp> createState() => _DispecerAppState();
 }
 
 class _DispecerAppState extends State<DispecerApp> {
+  OrderStore? _store;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.auth.addListener(_naPromenuPrijave);
+    _uskladiSaPrijavom();
+  }
+
+  void _naPromenuPrijave() => setState(_uskladiSaPrijavom);
+
+  /// Drži porudžbine i prijavu u skladu: prijava ih otvara, odjava zatvara.
+  void _uskladiSaPrijavom() {
+    if (widget.auth.signedIn && _store == null) {
+      _store = widget.createStore();
+    } else if (!widget.auth.signedIn && _store != null) {
+      _store!.dispose();
+      _store = null;
+    }
+  }
+
   @override
   void dispose() {
-    widget.store.dispose();
+    widget.auth.removeListener(_naPromenuPrijave);
+    _store?.dispose();
+    widget.auth.dispose();
     super.dispose();
   }
 
@@ -54,8 +91,23 @@ class _DispecerAppState extends State<DispecerApp> {
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1B6C3A)),
         useMaterial3: true,
       ),
-      home: HomePage(store: widget.store),
+      home: _pocetniEkran(),
     );
+  }
+
+  Widget _pocetniEkran() {
+    if (widget.auth.loading) {
+      return const Scaffold(
+        body: LoadingView(text: 'Provera prijave...'),
+      );
+    }
+
+    final store = _store;
+    if (!widget.auth.signedIn || store == null) {
+      return LoginScreen(auth: widget.auth);
+    }
+
+    return HomePage(store: store, auth: widget.auth);
   }
 }
 
@@ -84,9 +136,10 @@ class StartupErrorApp extends StatelessWidget {
 
 /// Početna strana sa dva ekrana: „Porudžbine" i „Ruta".
 class HomePage extends StatefulWidget {
-  const HomePage({super.key, required this.store});
+  const HomePage({super.key, required this.store, required this.auth});
 
   final OrderStore store;
+  final Auth auth;
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -94,6 +147,36 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int _izabrani = 0;
+
+  /// Odjava se pita za potvrdu: dugme je nadohvat ruke dok se vozi, a ponovna
+  /// prijava traži kucanje lozinke na telefonu.
+  Future<void> _odjavi() async {
+    final potvrda = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Odjava'),
+        content: Text(
+          widget.auth.email?.isNotEmpty == true
+              ? 'Odjaviti nalog ${widget.auth.email}?'
+              : 'Odjaviti se sa ovog telefona?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Odustani'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Odjavi me'),
+          ),
+        ],
+      ),
+    );
+
+    if (potvrda == true) {
+      await widget.auth.signOut();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -105,6 +188,13 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(_izabrani == 0 ? 'Porudžbine' : 'Predložena ruta'),
+        actions: [
+          IconButton(
+            tooltip: 'Odjava',
+            icon: const Icon(Icons.logout),
+            onPressed: _odjavi,
+          ),
+        ],
       ),
       body: SafeArea(child: ekrani[_izabrani]),
       bottomNavigationBar: NavigationBar(
