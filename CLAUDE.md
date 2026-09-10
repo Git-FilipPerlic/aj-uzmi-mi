@@ -147,7 +147,7 @@ Svaka faza je **samostalno korisna** — ne mora se čekati Faza 6 da bi sistem
 |---|---|---|
 | 0 | Viber bot + Go server, cash-on-delivery, jedan kanal (radni prototip logike) | u toku |
 | 1 | Backend agent (Node.js + Claude API) preuzima logiku iz Faze 0 kao alate; i dalje samo Viber, ali razgovor vodi pravi AI | |
-| 2 | Flutter aplikacija za kurira: aktivne porudžbine, predložena ruta, „preuzeto/dostavljeno", push za novu porudžbinu | |
+| 2 | Flutter aplikacija za kurira: aktivne porudžbine, predložena ruta, „preuzeto/dostavljeno", push za novu porudžbinu | u toku |
 | 3 | Dodavanje kanala: WhatsApp, Messenger, SMS, forma na sajtu | |
 | 4 | Razumevanje voice i image poruka (transkripcija + Claude vision) | |
 | 5 | Web dashboard u browseru, paralelno sa aplikacijom | |
@@ -204,6 +204,38 @@ Messaging).
 
 ## 7. Sledeći korak
 
-Kreće se ili od **Faze 1** (backend agent koji preuzima logiku iz Go servera)
-ili direktno od **Faze 2** (Flutter aplikacija) — koji god deo je zanimljivije
-videti „živ". Odluka je korisnikova; zapisati je ovde kad se donese.
+**Odluka (10.09.2026.): kreće se od Faze 2 — Flutter aplikacije za kurira.**
+Razlog: to je deo koji se najbrže vidi „živ" i najbrže počne da štedi vreme na
+terenu, dok backend agent (Faza 1) može da sačeka.
+
+Unutar Faze 2 dogovoren je redosled: **prvo ekrani sa test podacima, pa tek
+onda Firebase.** Razlog: da se raspored ekrana proveri u ruci pre nego što se
+kod veže za bazu — prepravka ekrana je jeftina, prepravka ekrana + baze nije.
+
+Zbog toga aplikacija za sad drži porudžbine u memoriji, u klasi `OrderStore`
+(`app/lib/data/order_store.dart`). **Kad dođe Firebase, menja se samo ta
+klasa** — ekrani je koriste preko istog skupa metoda i ne znaju odakle podaci
+stižu.
+
+### Ime i identifikatori (10.09.2026.)
+
+Usluga se zove **„Aj uzmi mi"** — šaljiv naziv iz srpskog slenga, ono što se
+kaže kad tražiš sitnicu usput („aj uzmi mi hleb kad se vraćaš"). Na engleskom
+bi bilo *could you just run and get me…*. Naziv je namerno domaći i neformalan
+jer ga vide mušterije; „Dispečer" ostaje interni naziv sistema.
+
+- Firebase projekat: **`aj-uzmi-mi`** (broj projekta 789558655673)
+- Firestore baza: region **`europe-west3`** (Frankfurt) — bira se samo jednom
+  i ne može se kasnije promeniti; izabran jer je najbliži Novom Sadu
+- Android package ID kurirske aplikacije: **`rs.ajuzmimi.kurir`** — posle
+  objavljivanja na Google Play se NIKAD ne menja. Reč „kurir" ostavlja mesta
+  da aplikacija za mušterije kasnije bude `rs.ajuzmimi.app`.
+- Naziv ispod ikonice na telefonu: **Aj uzmi mi**
+
+### Stanje aplikacije (`app/`)
+
+Gotovo: lista porudžbina, detalji sa dugmadima „Preuzeto" i „Dostavljeno",
+predložena ruta po polju `routeOrder`.
+
+Ostalo za Fazu 2: Firebase projekat, Firestore umesto test podataka, prijava
+mejlom i lozinkom, push notifikacija za novu porudžbinu.

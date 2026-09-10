@@ -1,0 +1,13 @@
+# Podešavanja razvojnih alata na ovom računaru — ne tiču se projekta.
+.idea/
+.vscode/
+
+# Firebase alat ostavlja dnevnike i keš pri deploy-u.
+.firebase/
+firebase-debug.log
+firestore-debug.log
+*.log
+
+# Windows sitnice.
+Thumbs.db
+desktop.ini

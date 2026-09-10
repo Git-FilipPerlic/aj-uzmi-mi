@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "789558655673",
+    "project_id": "aj-uzmi-mi",
+    "storage_bucket": "aj-uzmi-mi.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:789558655673:android:b50a0c4ea6d9d21c7c7968",
+        "android_client_info": {
+          "package_name": "rs.ajuzmimi.kurir"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDCUhqHl0EEoizycIvGKrtKzy8INlh_Q0w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
