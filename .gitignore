@@ -8,6 +8,12 @@ firebase-debug.log
 firestore-debug.log
 *.log
 
+# Backend agent: preuzeti paketi i TAJNE. `.env` drži Claude API ključ, a
+# `service-account.json` daje pun pristup Firebase bazi — nikad na GitHub.
+backend/node_modules/
+backend/.env
+backend/service-account.json
+
 # Windows sitnice.
 Thumbs.db
 desktop.ini

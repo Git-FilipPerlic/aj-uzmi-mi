@@ -67,6 +67,16 @@ class OrderCard extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 6),
+                      // Radnja ide prva — odatle kurir kreće. Kad je nema,
+                      // red se ne prikazuje (detalji kažu da nije uneta).
+                      if (order.shop.trim().isNotEmpty) ...[
+                        _RedSaIkonom(
+                          icon: Icons.storefront_outlined,
+                          text: order.shop.trim(),
+                          istaknuto: true,
+                        ),
+                        const SizedBox(height: 4),
+                      ],
                       _RedSaIkonom(
                         icon: Icons.place_outlined,
                         text: orPlaceholder(order.address, 'Adresa nije uneta'),

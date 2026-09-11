@@ -42,6 +42,11 @@ class OrderDetailScreen extends StatelessWidget {
               _Zaglavlje(order: porudzbina),
               const SizedBox(height: 16),
               _Red(
+                icon: Icons.storefront_outlined,
+                naslov: 'Radnja',
+                tekst: orPlaceholder(porudzbina.shop, 'Radnja nije uneta'),
+              ),
+              _Red(
                 icon: Icons.place_outlined,
                 naslov: 'Adresa',
                 tekst: orPlaceholder(porudzbina.address, 'Adresa nije uneta'),

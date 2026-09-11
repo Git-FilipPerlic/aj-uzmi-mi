@@ -1,0 +1,14 @@
+{
+  // Kod pokreće `tsx` direktno, pa TypeScript služi samo za proveru koda
+  // (`npm run provera`) i ništa ne prevodi u poseban folder.
+  "compilerOptions": {
+    "target": "es2023",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "types": ["node"]
+  },
+  "include": ["src"]
+}

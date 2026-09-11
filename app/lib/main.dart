@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 
 import 'data/auth.dart';
 import 'data/firebase_auth_service.dart';
+import 'data/firebase_push_service.dart';
 import 'data/firestore_order_store.dart';
 import 'data/order_store.dart';
+import 'data/push.dart';
 import 'firebase_options.dart';
 import 'screens/login_screen.dart';
 import 'screens/orders_screen.dart';
@@ -29,6 +31,7 @@ Future<void> main() async {
     DispecerApp(
       auth: FirebaseAuthService(),
       createStore: () => FirestoreOrderStore(),
+      push: FirebasePushService(),
     ),
   );
 }
@@ -40,7 +43,12 @@ Future<void> main() async {
 /// pravila baze traže prijavljenog korisnika, pa čitanje bez prijave ionako ne
 /// bi prošlo.
 class DispecerApp extends StatefulWidget {
-  const DispecerApp({super.key, required this.auth, required this.createStore});
+  const DispecerApp({
+    super.key,
+    required this.auth,
+    required this.createStore,
+    this.push = const Push(),
+  });
 
   final Auth auth;
 
@@ -48,12 +56,20 @@ class DispecerApp extends StatefulWidget {
   /// memorijska verzija sa test podacima.
   final OrderStore Function() createStore;
 
+  /// Push obaveštenja: uključuju se prijavom, isključuju odjavom — da telefon
+  /// sa kog se kurir odjavio ne dobija porudžbine.
+  final Push push;
+
   @override
   State<DispecerApp> createState() => _DispecerAppState();
 }
 
 class _DispecerAppState extends State<DispecerApp> {
   OrderStore? _store;
+
+  /// Preko ovoga se prikazuje obaveštenje koje stigne dok je aplikacija
+  /// otvorena, bez obzira na kom je ekranu kurir.
+  final _poruke = GlobalKey<ScaffoldMessengerState>();
 
   @override
   void initState() {
@@ -68,10 +84,25 @@ class _DispecerAppState extends State<DispecerApp> {
   void _uskladiSaPrijavom() {
     if (widget.auth.signedIn && _store == null) {
       _store = widget.createStore();
+      widget.push.start(_prikaziObavestenje);
     } else if (!widget.auth.signedIn && _store != null) {
       _store!.dispose();
       _store = null;
+      widget.push.stop();
     }
+  }
+
+  /// Traka ostaje dok je kurir ne skloni: u vožnji se kratka traka lako
+  /// propusti, a obaveštenje o novoj porudžbini ne sme da nestane samo od sebe.
+  void _prikaziObavestenje(String naslov, String tekst) {
+    final redovi = [naslov, tekst].where((t) => t.isNotEmpty).join('\n');
+    _poruke.currentState?.showSnackBar(
+      SnackBar(
+        content: Text(redovi.isEmpty ? 'Nova porudžbina' : redovi),
+        duration: const Duration(days: 1),
+        action: SnackBarAction(label: 'U redu', onPressed: () {}),
+      ),
+    );
   }
 
   @override
@@ -87,6 +118,7 @@ class _DispecerAppState extends State<DispecerApp> {
     return MaterialApp(
       title: 'Aj uzmi mi',
       debugShowCheckedModeBanner: false,
+      scaffoldMessengerKey: _poruke,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1B6C3A)),
         useMaterial3: true,

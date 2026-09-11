@@ -1,0 +1,23 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "Aj uzmi mi — backend agent (Faza 1)",
+  "private": true,
+  "scripts": {
+    "provera": "tsc",
+    "test": "tsx --test src/*.test.ts",
+    "proba": "tsx src/proba_porudzbina.ts",
+    "razgovor": "tsx src/razgovor.ts"
+  },
+  "license": "UNLICENSED",
+  "type": "module",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.125.0",
+    "firebase-admin": "^14.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.2",
+    "tsx": "^4.23.13",
+    "typescript": "^7.0.2"
+  }
+}

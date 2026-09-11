@@ -16,6 +16,7 @@ List<Order> testOrders() {
       customerContact: '+381 63 111 222',
       channel: 'viber',
       items: ['1kg mlevenog mesa', '500g kajmaka'],
+      shop: 'Kovilj mesara, Futoška 5',
       address: 'Bulevar Kneza Miloša 45, Novi Sad',
       urgency: OrderUrgency.hitno,
       price: 450,
@@ -29,6 +30,7 @@ List<Order> testOrders() {
       customerContact: '+381 64 333 444',
       channel: 'whatsapp',
       items: ['hleb', 'mleko 2l', 'jaja 10kom'],
+      shop: 'Maxi, Futoška 1',
       address: 'Futoška 12, Novi Sad',
       urgency: OrderUrgency.normal,
       price: 300,
@@ -75,6 +77,21 @@ List<Order> testOrders() {
       status: OrderStatus.dostavljena,
       routeOrder: 0,
       createdAt: sada.subtract(const Duration(hours: 2)),
+    ),
+    // Sitnica bez žurbe.
+    Order(
+      id: '6',
+      customerName: 'Ana Petrović',
+      customerContact: '+381 65 123 456',
+      channel: 'viber',
+      items: ['baterije AA'],
+      shop: 'Trafika, Futoška 20',
+      address: 'Mileve Marić 14, Novi Sad',
+      urgency: OrderUrgency.kadStignes,
+      price: 0,
+      status: OrderStatus.potvrdjena,
+      routeOrder: 4,
+      createdAt: sada.subtract(const Duration(minutes: 40)),
     ),
   ];
 }

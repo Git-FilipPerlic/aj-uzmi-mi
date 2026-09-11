@@ -147,7 +147,7 @@ Svaka faza je **samostalno korisna** — ne mora se čekati Faza 6 da bi sistem
 |---|---|---|
 | 0 | Viber bot + Go server, cash-on-delivery, jedan kanal (radni prototip logike) | u toku |
 | 1 | Backend agent (Node.js + Claude API) preuzima logiku iz Faze 0 kao alate; i dalje samo Viber, ali razgovor vodi pravi AI | |
-| 2 | Flutter aplikacija za kurira: aktivne porudžbine, predložena ruta, „preuzeto/dostavljeno", push za novu porudžbinu | u toku |
+| 2 | Flutter aplikacija za kurira: aktivne porudžbine, predložena ruta, „preuzeto/dostavljeno", push za novu porudžbinu | gotovo (11.09.2026.) |
 | 3 | Dodavanje kanala: WhatsApp, Messenger, SMS, forma na sajtu | |
 | 4 | Razumevanje voice i image poruka (transkripcija + Claude vision) | |
 | 5 | Web dashboard u browseru, paralelno sa aplikacijom | |
@@ -175,8 +175,9 @@ pravila o saglasnosti se razlikuju — pre puštanja u rad sa pravim mušterijam
   customerContact: string,
   channel: string,      // "viber", "whatsapp", "sms", "web", "messenger"
   items: array of strings,
+  shop: string,         // radnja: naziv i adresa, npr. "Maxi, Futoška 1"
   address: string,
-  urgency: string,      // "normal", "hitno", "zakazano"
+  urgency: string,      // "normal", "hitno", "zakazano", "kad_stignes"
   price: number,
   status: string,       // "nova", "potvrdjena", "preuzeta", "dostavljena"
   routeOrder: number,
@@ -267,4 +268,93 @@ ko mogao sebi da napravi nalog i čita porudžbine.
 To znači „samo kurir" isključivo zato što je samostalno pravljenje naloga
 isključeno — **ne uključivati ga ponovo** bez promene pravila.
 
-Ostalo za Fazu 2: push notifikacija za novu porudžbinu.
+**Push obaveštenja (11.09.2026.):** telefon se po prijavi upisuje na Firebase
+temu `kurir`, a po odjavi se ispisuje. Poruku na tu temu za sad šalje čovek iz
+Firebase konzole; kasnije će je slati backend agent kad upiše novu porudžbinu.
+Tema umesto pojedinačnih adresa telefona, jer ništa ne mora da se čuva u bazi
+dok je kurir jedan. Obaveštenje dok je aplikacija otvorena je traka koja
+**ostaje dok je kurir ne skloni** — kratka traka se u vožnji propušta.
+Push radi samo na Androidu; Windows verzija ga preskače.
+
+`android/gradle.properties` ima `kotlin.incremental=false` namerno: projekat je
+na disku D:, Flutter paketi na C:, i Kotlin-ov keš zbog toga ruši Android build.
+
+**Faza 2 je gotova.** Sledeće je Faza 1 (backend agent); nacrt uputstva za
+agenta je u `docs/agent_prompt.md`, sa otvorenim pitanjima na dnu.
+
+### Faza 1 — backend agent (počet 11.09.2026.)
+
+Kod je u `backend/` (Node.js + TypeScript, pokreće se preko `tsx`).
+Paketi (odobreni): `@anthropic-ai/sdk`, `firebase-admin`, `typescript`, `tsx`,
+`@types/node`. Provera koda: `npm run provera`.
+
+- **Tajne** su u `backend/.env` (Claude i ORS ključ) i
+  `backend/service-account.json` (pun pristup bazi) — oba su u `.gitignore`.
+- **Model:** `claude-sonnet-5`, jer odeljak 3 kaže Sonnet za razgovor — dovoljan
+  za razgovor sa mušterijom, a jeftiniji i brži od najjačeg modela.
+- **Prvi cilj:** razgovor u terminalu na računaru (bez Vibera) → agent upiše
+  porudžbinu → ona se pojavi na telefonu i stigne push. Kanali se kače posle.
+- **Cena** zavisi od hitnosti, artikala i **kilometara** (odluka korisnika).
+  Iznose daje korisnik — ne izmišljati ih.
+- **Kilometri** se računaju preko **OpenRouteService**: besplatan ključ (oko
+  2000 upita dnevno), evropska firma, daje i adresu→koordinate i put po
+  ulicama. Odbačeni: Google Maps (traži karticu, posle besplatnog dela se
+  plaća) i vazdušna linija (besplatno, ali netačno za bicikl po ulicama).
+- **Udaljenost se meri od radnje do mušterije** (odluka korisnika), po ruti za
+  **bicikl** (ORS profil `cycling-regular`), jer kurir vozi bicikl. Ako
+  mušterija ne kaže tačno koju radnju, agent pita.
+- **Polje `shop`** (dodato 11.09.2026.): porudžbina pamti radnju. Razlog:
+  kuriru je radnja prva stvar koju treba da zna („idi kod Kovilj mesare po…"),
+  a treba i za merenje udaljenosti. Aplikacija ga prikazuje na kartici
+  (iznad adrese, a red se skriva kad radnje nema) i u detaljima („Radnja nije
+  uneta" kad je prazno).
+- **Nova hitnost „Kad stigneš"** (naziv dao korisnik, u bazi `kad_stignes`)
+  za sitnice i posao bez žurbe — pored Normalno/Hitno/Zakazano. Aplikacija je
+  prikazuje prigušenom bojom, jer nije hitno.
+- **Zona dostave: samo Šarengrad** (odluka korisnika, 11.09.2026.) — adresa
+  dostave mora biti u ulici Mileve Marić, Momčila Tapavice ili Stanoja
+  Stanojevića; radnja može biti bilo gde. Ovo sužava „Novi Sad" iz odeljka 1
+  za početnu fazu. Proverava se u backend-u (`src/zona.ts`), ne samo u
+  uputstvu agentu, da nagovaranje u razgovoru ne može da propusti porudžbinu.
+  Mušteriji van zone agent odgovara rečenicom korisnika iz nacrta: „Ljubi
+  brat, trenutno pokrivam isključivo naš Šarengrad…"
+- **Spisak radnji iz komšiluka** (`src/radnje.ts`, 11.09.2026.): deset radnji
+  koje je korisnik poslao kao Google Maps linkove — većina u nizu Mileve Marić
+  1–5, plus Svetofor i Magic Walls. Svaka ima tačne koordinate, šta prodaje i
+  napomenu (npr. Svetofor: „ne kupuješ meso tamo"). Agent ih zna i predlaže,
+  a merenje za njih uzima mesto iz spiska umesto pretrage. Razlog: pretraga
+  radnju bez imena (jaja, mešovita roba) uopšte ne nađe. (Strah da će „Maxi"
+  pogoditi pogrešan Maxi korisnik je odbacio: u komšiluku se jedan zove
+  „Maxi", a drugi „Maxi sa mesarom", pa se ne mešaju.) Radnja van spiska je
+  i dalje dozvoljena. Adresu radnje korisnik kopira iz Google Maps — ne
+  pogađati je po mapi (tako je Svetofor pogrešno dobio Veterničke bitke 2).
+
+#### Cenovnik (potvrdio korisnik 11.09.2026.)
+
+Cene su po vrsti posla i brzini, u dinarima:
+
+| Šta | Kad | Cena |
+|---|---|---|
+| Sitnica („donesi kad god") | kad stigneš | prvi artikal besplatno, svaki sledeći +50 |
+| Namirnice iz radnje | u roku od 60 min | 150 |
+| Piljara / radnja | odmah, pa odmah nazad | 200 — ako ne stiže, ponuditi kasnije i jeftinije |
+| Cigare | odmah | 150 |
+| Specijalno (cvećara, kafa i kolač — pipavo, prosipa se) | kad stigneš | 200 |
+| Specijalno | hitno | 200 + 150 = 350 |
+
+Dodaci:
+- **Teško** (više od 2 L tečnosti, 5 L, kilo krompira i više): +150
+- **Osetljivo** (lomljivo, ne sme da se ošteti, npr. komplet kozmetike): +100
+- **Dugo traje** (više radnji, daleko): dodatak po vremenu — iznos još nije
+  određen. Razlog (reči korisnika): „nije samo što je daleko nego što traje;
+  za to vreme ja možda mogu raditi neku drugu porudžbinu". Vreme = vožnja po
+  ORS-u + procena kupovine po radnji.
+- **PODSETNIK za korisnika:** izmeriti koliko stvarno traje jedna kupovina
+  (vožnja 500 m, vezivanje bicikla, traženje, 5 artikala, red na kasi,
+  pakovanje). List za merenje: `docs/merenje_vremena.md`. Dok ga nema, agent
+  računa oko 10 min po radnji — privremena procena, zameniti pravim brojem.
+
+#### Ideje za kasnije (ne praviti bez dogovora)
+
+- **Bonusi za komšije**: kad se ostvari određeni profit, deliti bonuse i
+  slične pogodnosti da se komšije stimulišu (ideja korisnika, 11.09.2026.).

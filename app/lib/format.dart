@@ -11,13 +11,15 @@ import 'models/order.dart';
 String orPlaceholder(String value, String placeholder) =>
     value.trim().isEmpty ? placeholder : value.trim();
 
-/// „Hitno" / „Zakazano" / „Normalno".
+/// „Hitno" / „Zakazano" / „Kad stigneš" / „Normalno".
 String urgencyLabel(String urgency) {
   switch (urgency) {
     case OrderUrgency.hitno:
       return 'Hitno';
     case OrderUrgency.zakazano:
       return 'Zakazano';
+    case OrderUrgency.kadStignes:
+      return 'Kad stigneš';
     case OrderUrgency.normal:
       return 'Normalno';
     default:
@@ -26,13 +28,16 @@ String urgencyLabel(String urgency) {
 }
 
 /// Boja kojom se označava hitnost. Hitno je crveno, zakazano plavo,
-/// normalno neutralno — da se razlika vidi u jednom pogledu.
+/// kad stigneš prigušeno, normalno neutralno — da se razlika vidi u jednom
+/// pogledu.
 Color urgencyColor(String urgency, ColorScheme scheme) {
   switch (urgency) {
     case OrderUrgency.hitno:
       return scheme.error;
     case OrderUrgency.zakazano:
       return scheme.tertiary;
+    case OrderUrgency.kadStignes:
+      return scheme.secondary;
     case OrderUrgency.normal:
       return scheme.primary;
     default:

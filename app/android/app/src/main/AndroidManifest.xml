@@ -1,4 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Push obaveštenja o novim porudžbinama (Android 13+ traži dozvolu). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <application
         android:label="Aj uzmi mi"
         android:name="${applicationName}"
