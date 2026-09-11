@@ -167,7 +167,7 @@ void main() {
     await tester.pumpWidget(prijavljenaAplikacija());
     await tester.pumpAndSettle();
 
-    expect(find.text('Maxi, Futoška 1'), findsOneWidget);
+    expect(find.text('Prodavnica mešovite robe, Mileve Marić 5'), findsOneWidget);
 
     // Porudžbina „Kad stigneš" je niže u listi.
     await tester.scrollUntilVisible(

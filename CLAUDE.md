@@ -73,9 +73,9 @@ Umesto posebne integracije za svaki kanal, najisplativije je koristiti
 **jednog agregatora** koji već ima Viber + WhatsApp + SMS u jednom API-ju —
 **Infobip** je vodeća platforma za ovaj region (balkanska firma, dobro pokriva
 srpske mobilne operatere) i ima jedinstven „Messages API" za sve kanale.
-Messenger ide odvojeno preko Meta-inog Graph API-ja. Viber sam po sebi ima i
-besplatan REST Bot API ako se kreće bez agregatora, pa se za SMS/WhatsApp
-plati kasnije.
+Messenger ide odvojeno preko Meta-inog Graph API-ja. **Viber bot više nije
+besplatan** (od 5.2.2024. samo po ugovoru, 115 € mesečno) — vidi odluku o
+kanalima u odeljku 7.
 
 **Sloj 2 — Agent (mozak).** Backend servis prima poruku iz bilo kog kanala,
 prosleđuje je AI agentu (Claude API) zajedno sa kontekstom porudžbine
@@ -124,10 +124,10 @@ Viber / WhatsApp / Messenger / SMS / Sajt / (Telefon)
 | Push notifikacije | **Firebase Cloud Messaging** | Standard za Flutter, besplatno u ovoj skali |
 | Backend / agent servis | **Node.js + TypeScript** | Anthropic (Claude) i sve messaging platforme imaju najbolju podršku baš za JS/TS |
 | AI agent | **Claude API** (Sonnet za razgovor/rezonovanje) | Razume prirodan jezik, čita slike nativno, poziva „alate" za cenu/rutu |
-| Transkripcija glasa | **Whisper API ili Google Speech-to-Text** | Prevodi voice poruke u tekst pre nego što ih agent obradi |
-| Multi-channel poruke | **Infobip** (SMS + Viber + WhatsApp) ili pojedinačno Viber Bot API (besplatno) | Jedna integracija umesto tri; Infobip je jak baš na Balkanu |
+| Transkripcija glasa | **Groq (Whisper Large v3)** — besplatno, bez kartice, do 2.000 poruka dnevno | Prevodi voice poruke u tekst pre nego što ih agent obradi; Claude zvuk ne prima (proveren Models API, 11.09.2026.) |
+| Multi-channel poruke | **Meta** (Messenger, Instagram, WhatsApp) — besplatno za odgovore u roku 24 h | Viber otpao (115 €/mes.), Infobip se plaća; vidi odluku o kanalima u odeljku 7 |
 | Web dashboard | **jednostavna web app** (isti backend, npr. Next.js) | Praćenje i upravljanje dok se sedi za računarom |
-| Hosting backend-a | **Railway ili Render** | WhatsApp/Viber/Meta traže javnu HTTPS adresu 24/7; kućni PC bi tražio dinamički DNS, port forwarding i SSL — nepotrebna komplikacija |
+| Hosting backend-a | **Koyeb** (besplatno, ne „zaspi"; odluka 11.09.2026. — Railway se plaća, Render zaspi kad nema saobraćaja) | WhatsApp/Viber/Meta traže javnu HTTPS adresu 24/7; kućni PC bi tražio dinamički DNS, port forwarding i SSL — nepotrebna komplikacija |
 
 **Napomena o postojećem Go serveru:** ništa se ne baca — logika za cene, rute
 i zone prelazi direktno u agent kao „alati", samo se piše u Node.js/TS umesto
@@ -232,6 +232,12 @@ jer ga vide mušterije; „Dispečer" ostaje interni naziv sistema.
   objavljivanja na Google Play se NIKAD ne menja. Reč „kurir" ostavlja mesta
   da aplikacija za mušterije kasnije bude `rs.ajuzmimi.app`.
 - Naziv ispod ikonice na telefonu: **Aj uzmi mi**
+- Facebook stranica (napravljena 11.09.2026.):
+  `https://www.facebook.com/profile.php?id=61593946365520` — za sad se
+  zove **„Brzo nešto"** (korisnik još bira ime usluge). Naziv i @adresa se
+  mogu menjati, veza sa backendom ide preko broja i ključa. Instagram
+  (poslovni nalog) je povezan sa stranicom i pristup porukama u Inbox-u je
+  uključen.
 
 ### Gde stoji kod
 
@@ -275,6 +281,12 @@ Tema umesto pojedinačnih adresa telefona, jer ništa ne mora da se čuva u bazi
 dok je kurir jedan. Obaveštenje dok je aplikacija otvorena je traka koja
 **ostaje dok je kurir ne skloni** — kratka traka se u vožnji propušta.
 Push radi samo na Androidu; Windows verzija ga preskače.
+
+**Windows prozor (11.09.2026.):** uzak (480) i preko cele visine ekrana, na
+sredini; širina se ne može razvući van 360–640, ni maksimizovanjem. Podešeno
+u `windows/runner/main.cpp` i `win32_window.cpp`, bez paketa. Razlog (reči
+korisnika): kartice razvučene preko cele širine „ne izgledaju kao nijedan
+program koji znam" — pregledno je kad izgleda kao telefon.
 
 `android/gradle.properties` ima `kotlin.incremental=false` namerno: projekat je
 na disku D:, Flutter paketi na C:, i Kotlin-ov keš zbog toga ruši Android build.
@@ -328,6 +340,21 @@ Paketi (odobreni): `@anthropic-ai/sdk`, `firebase-admin`, `typescript`, `tsx`,
   „Maxi", a drugi „Maxi sa mesarom", pa se ne mešaju.) Radnja van spiska je
   i dalje dozvoljena. Adresu radnje korisnik kopira iz Google Maps — ne
   pogađati je po mapi (tako je Svetofor pogrešno dobio Veterničke bitke 2).
+
+- **Kanali (odluka korisnika, 11.09.2026.):** Viber otpada za sad — bot se
+  od 2024. pravi samo po ugovoru, 115 € mesečno (oko 90 porudžbina mesečno
+  samo da se pokrije). Idu **besplatni kanali sa glasovnim porukama:
+  WhatsApp, Instagram i Messenger** — sva tri preko jednog Meta naloga;
+  odgovori mušteriji koja je prva pisala su besplatni u roku od 24 h.
+  **TikTok** ako njegov API za poruke proradi za Srbiju (u EU nije dostupan,
+  a glasovne poruke preko API-ja nisu potvrđene). Razlog: korisnik hoće
+  besplatne opcije, a mušterije moraju moći da pošalju glasovnu poruku.
+  Web app (besplatan Firebase hosting) ostaje opcija; mejl je na kraju.
+  Redosled: Messenger + Instagram → WhatsApp (traži poseban broj/SIM) →
+  **SMS preko starog Android telefona** sa SIM karticom i besplatnom
+  aplikacijom-prosleđivačem (plaća se samo tarifa; korisnik za sad nema
+  telefon) → **pozivi sa ostavljanjem glasovne poruke** (Faza 6, telefonski
+  servis se plaća; korisnik to želi — „da ljudi zovu na aparat").
 
 #### Cenovnik (potvrdio korisnik 11.09.2026.)
 

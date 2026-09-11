@@ -7,17 +7,22 @@
     "provera": "tsc",
     "test": "tsx --test src/*.test.ts",
     "proba": "tsx src/proba_porudzbina.ts",
-    "razgovor": "tsx src/razgovor.ts"
+    "razgovor": "tsx src/razgovor.ts",
+    "server": "tsx src/server.ts",
+    "start": "tsx src/server.ts"
+  },
+  "engines": {
+    "node": ">=22"
   },
   "license": "UNLICENSED",
   "type": "module",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.125.0",
-    "firebase-admin": "^14.4.0"
+    "firebase-admin": "^14.4.0",
+    "tsx": "^4.23.13"
   },
   "devDependencies": {
     "@types/node": "^22.20.2",
-    "tsx": "^4.23.13",
     "typescript": "^7.0.2"
   }
 }

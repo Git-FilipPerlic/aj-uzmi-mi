@@ -32,7 +32,9 @@ ${VRSTE.map((v) => `- ${v}: ${USLUGE[v].opis}`).join("\n")}
 
 Teško je: više od 2 L tečnosti ukupno, pakovanje od 5 L, kilo krompira i više. Osetljivo je: lomljivo ili ono što ne sme da se ošteti.
 
-Piši kratko i prijateljski, kao komšija — ljudi ovo čitaju na telefonu. Srpski, latinica.`;
+Poruka koja počinje sa „[glasovna poruka]" je automatski prepis onoga što je mušterija izgovorila — u imenima i adresama može biti grešaka, pa kad nešto nije jasno, pitaj.
+
+Piši kratko i prijateljski, kao komšija — ljudi ovo čitaju na telefonu. Srpski, latinica. Bez markdown oznaka (zvezdice, tarabe): Messenger i Instagram prikazuju običan tekst.`;
 
 const ALATI: Anthropic.Tool[] = [
   {

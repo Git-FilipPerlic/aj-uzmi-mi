@@ -207,6 +207,18 @@ Win32Window::MessageHandler(HWND hwnd,
       return 0;
     }
 
+    case WM_GETMINMAXINFO: {
+      // Širina je ograničena (360–640), visina slobodna — da se kartice ne
+      // razvlače preko celog monitora ni kad se prozor raširi ili maksimizuje.
+      auto info = reinterpret_cast<MINMAXINFO*>(lparam);
+      double razmera = FlutterDesktopGetDpiForMonitor(MonitorFromWindow(
+                           hwnd, MONITOR_DEFAULTTONEAREST)) / 96.0;
+      info->ptMinTrackSize.x = Scale(360, razmera);
+      info->ptMaxTrackSize.x = Scale(640, razmera);
+      info->ptMaxSize.x = info->ptMaxTrackSize.x;
+      return 0;
+    }
+
     case WM_ACTIVATE:
       if (child_content_ != nullptr) {
         SetFocus(child_content_);

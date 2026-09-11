@@ -76,13 +76,14 @@ def vreme(v):
     return {"timestampValue": v.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")}
 
 
-def porudzbina(ime, kontakt, kanal, artikli, adresa, hitnost, cena, status, mesto, kada):
+def porudzbina(ime, kontakt, kanal, artikli, adresa, hitnost, cena, status, mesto, kada, radnja=""):
     return {
         "fields": {
             "customerName": tekst(ime),
             "customerContact": tekst(kontakt),
             "channel": tekst(kanal),
             "items": spisak(artikli),
+            "shop": tekst(radnja),
             "address": tekst(adresa),
             "urgency": tekst(hitnost),
             "price": broj(cena),
@@ -105,10 +106,11 @@ def main():
             "Bulevar Kneza Miloša 45, Novi Sad",
             "hitno", 450, "nova", 1, sada - timedelta(minutes=8)),
         "proba-2": porudzbina(
-            "Dragan Perić", "+381 64 333 444", "whatsapp",
-            ["hleb", "mleko 2l", "jaja 10kom"],
-            "Futoška 12, Novi Sad",
-            "normal", 300, "potvrdjena", 2, sada - timedelta(minutes=25)),
+            "Jelena Kovač", "+381 64 333 444", "whatsapp",
+            ["hleb", "mleko 1l", "Plazma keks", "ofingeri od kineza"],
+            "Momčila Tapavice 3, Novi Sad",
+            "normal", 150, "potvrdjena", 2, sada - timedelta(minutes=25),
+            radnja="Prodavnica mešovite robe, Mileve Marić 5"),
         "proba-3": porudzbina(
             "Apoteka Sunce", "021 555 666", "sms",
             ["paket lekova za g. Simića"],

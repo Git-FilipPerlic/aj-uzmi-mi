@@ -1,5 +1,6 @@
 #include <flutter/dart_project.h>
 #include <flutter/flutter_view_controller.h>
+#include <flutter_windows.h>
 #include <windows.h>
 
 #include "flutter_window.h"
@@ -24,11 +25,27 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
 
   project.set_dart_entrypoint_arguments(std::move(command_line_arguments));
 
+  // Uzak prozor preko cele visine ekrana, kao telefon (želja korisnika):
+  // kartice razvučene preko celog monitora ne liče ni na jedan program.
+  const int kSirinaProzora = 480;
+
   FlutterWindow window(project);
   Win32Window::Point origin(10, 10);
-  Win32Window::Size size(1280, 720);
+  Win32Window::Size size(kSirinaProzora, 720);
   if (!window.Create(L"Aj uzmi mi", origin, size)) {
     return EXIT_FAILURE;
+  }
+
+  // Cela visina radnog dela ekrana (bez trake sa zadacima), prozor na sredini.
+  RECT radno;
+  if (::SystemParametersInfo(SPI_GETWORKAREA, 0, &radno, 0)) {
+    HMONITOR monitor =
+        ::MonitorFromWindow(window.GetHandle(), MONITOR_DEFAULTTOPRIMARY);
+    double razmera = FlutterDesktopGetDpiForMonitor(monitor) / 96.0;
+    int sirina = static_cast<int>(kSirinaProzora * razmera);
+    int x = radno.left + (radno.right - radno.left - sirina) / 2;
+    ::SetWindowPos(window.GetHandle(), nullptr, x, radno.top, sirina,
+                   radno.bottom - radno.top, SWP_NOZORDER | SWP_NOACTIVATE);
   }
   window.SetQuitOnClose(true);
 

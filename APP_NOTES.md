@@ -307,3 +307,102 @@ sledeće. Vodi se od prvog dana, da se odluke ne izgube.
   Veterničke bitke 2 — to je bio pogodak po mapi. Koordinate ostaju iste.
 - Otvoren problem „nije sigurno da je pogođen baš taj Maxi" je zatvoren:
   u komšiluku su „Maxi" i „Maxi sa mesarom", pa se ne mešaju.
+
+## 2026-09-11 — Windows prozor kao telefon; Dragan Perić zamenjen
+
+- Urađeno:
+  - Windows prozor: širina 480, cela visina radnog dela ekrana, na sredini
+    (`windows/runner/main.cpp`); širina ograničena na 360–640 i kod
+    razvlačenja i kod maksimizovanja (`win32_window.cpp`, WM_GETMINMAXINFO).
+    Bez paketa. Razlog upisan u CLAUDE.md.
+  - Probna porudžbina „Dragan Perić" (korisnika nervira) zamenjena sa
+    „Jelena Kovač": 4 stavke (hleb, mleko 1l, Plazma keks, ofingeri od
+    kineza), Prodavnica mešovite robe → Momčila Tapavice 3, 150 din.
+    Promenjeno u bazi (dokument `proba-2`, preko service account-a), u
+    `tools/seed_firestore.py` (sad upisuje i `shop`) i u `test_orders.dart`.
+- Provereno: `flutter analyze` bez grešaka; `flutter test` 20/20. Aplikacija
+  napravljena i pokrenuta na Windowsu; izmeren prozor: 480 × 1040, ekran
+  1920 × 1040 radnog dela → pun po visini, na sredini. Dragana više nema
+  nigde u bazi.
+- Sledeće: proba razgovora sa spiskom radnji; iznos dodatka za vreme;
+  merenje trajanja kupovine; pa Viber.
+
+## 2026-09-11 — Proba razgovora sa spiskom radnji
+
+- Provereno (bez potvrde porudžbine, ništa nije upisano u bazu):
+  - „10 jaja i mleko 1l, Mileve Marić 14" → agent predložio Prodavnicu
+    mešovite robe, Mileve Marić 5 („oboje na jednom mestu").
+  - „pola kile mlevenog iz Svetofora" → agent upozorio da se u Svetoforu
+    meso ne kupuje i pitao za drugu radnju.
+  - „buket cveća za ženu, do večeras" → Ana Maria 021, vrsta „specijalno".
+- Primećeno: agent pita za broj telefona pre cene, iako kontakt sme biti
+  prazan — na Viberu će broj ionako stizati sam. Ton ponekad čudan
+  („Ljubi te, ali…"). Nije popravljano, samo zabeleženo.
+- Sledeće: Viber (prvo proveriti uslove za nove Viber botove).
+
+## 2026-09-11 — Prijemnica za Messenger i Instagram (+ glasovne poruke)
+
+- Odluke (upisane u CLAUDE.md): Viber otpao (115 €/mes.); kanali Meta
+  (Messenger, Instagram, pa WhatsApp); glas preko Groq-a (Whisper,
+  besplatno); hosting Koyeb (besplatno, ne zaspi); SMS kasnije preko starog
+  Android telefona; pozivi sa glasovnom porukom na kraju (Faza 6).
+- Urađeno (bez novih paketa):
+  - `src/meta.ts` — provera Metinog potpisa (lažne poruke se odbijaju),
+    izvlačenje poruka iz Meta obaveštenja (tekst, glas, ostali prilozi;
+    „echo" i potvrde čitanja se preskaču), deljenje odgovora na 2000 znakova,
+    slanje odgovora (bez META_PAGE_TOKEN radi „na suvo" — ispis u terminal).
+  - `src/glas.ts` — glasovna poruka → tekst preko Groq-a (srpski, nagoveštaj
+    sa latinicom i imenima ulica). Bez ključa vraća razlog, ne puca.
+  - `src/server.ts` + `npm run server` — prijemnica: Metina provera adrese,
+    svaka mušterija ima svoj razgovor, poruke iste mušterije idu redom, ista
+    poruka poslata dvaput se obrađuje jednom.
+  - Agent: prepis glasa stiže sa oznakom „[glasovna poruka]" (pa zna da
+    može biti grešaka), i piše bez markdown zvezdica.
+- Provereno: `npm run provera` bez grešaka; `npm test` 26/26 (8 novih).
+  Uživo na računaru sa lažnom „Metom": provera adrese sa dobrom rečju vraća
+  broj, sa lošom 403; poruka bez potpisa 403; tekst → agent odgovorio
+  (bez zvezdica); duplikat → jedan odgovor; glas bez Groq ključa → ljubazna
+  poruka da napiše.
+- Nije provereno: pravi prepis glasa (čeka GROQ_API_KEY), pravo slanje na
+  Messenger/Instagram (čeka Facebook stranicu i Meta aplikaciju).
+- Otvoreno: razgovori su samo u memoriji (restart ih briše); kurir ne dobija
+  broj mušterije sa Messengera; agent jaja računa kao „osetljivo" (+100) —
+  pitati korisnika; za Koyeb treba rešiti service-account.json (nije u
+  repozitorijumu).
+- Sledeće: korisnik pravi naloge (Facebook stranica, Instagram poslovni,
+  developers.facebook.com, Groq, Koyeb); zatim postavljanje na Koyeb.
+
+## 2026-09-11 — Facebook stranica + Instagram; Firebase ključ za hosting
+
+- Korisnik napravio Facebook stranicu (za sad „Brzo nešto", ime se još
+  bira) i povezao poslovni Instagram; pristup Instagram porukama u Inbox-u
+  uključen. Upisano u CLAUDE.md.
+- `backend/src/firebase.ts`: ključ za bazu može da stigne i kao podešavanje
+  `FIREBASE_SERVICE_ACCOUNT` (ceo sadržaj service-account.json) — potrebno
+  za Koyeb, jer fajl ne ide na GitHub. Na računaru i dalje radi fajl.
+- Provereno: `npm run provera` bez grešaka; `npm test` 26/26. Uživo: sa
+  ključem iz podešavanja baza je pročitana (7 porudžbina, samo čitanje); sa
+  pogrešnim podešavanjem jasna poruka.
+- Sledeće: korisnik proverava „Allow access to messages" u Instagram
+  aplikaciji na telefonu, pravi nalog na developers.facebook.com i Koyeb;
+  zatim postavljanje backend-a na Koyeb (javna adresa za Meta webhook).
+
+## 2026-09-11 — Groq radi; priprema za Koyeb
+
+- Korisnik napravio naloge (developers.facebook.com, Koyeb, Groq) i upisao
+  GROQ_API_KEY u backend/.env.
+- Urađeno:
+  - `src/glas.ts`: `uLatinicu` — Whisper srpski piše ćirilicom i uprkos
+    nagoveštaju, pa se prepis prebacuje u latinicu slovo po slovo (agent,
+    provera zone i kurir rade na latinici). Bez paketa.
+  - `package.json`: `npm start` (Koyeb ga pokreće), `engines: node >=22`,
+    `tsx` premešten u dependencies — potreban je i u radu, a hosting posle
+    instalacije briše dev pakete. Nije nov paket.
+- Provereno: Groq ključ prihvaćen (whisper-large-v3 dostupan); probni
+  snimak (Windows engleski glas čita srpsku rečenicu) prepisan i vraćen
+  latinicom — iskrivljeno zbog engleskog izgovora, ali ceo put radi.
+  `npm run provera` bez grešaka; `npm test` 27/27; baza se čita i posle
+  ponovne instalacije (npm upozorio da protobufjs nije pokrenuo postinstall
+  — ne smeta).
+- Sledeće: push na GitHub (korisnik odobrava), pa Koyeb servis iz foldera
+  `backend` sa ključevima kao tajnama; zatim Meta aplikacija i webhook.
