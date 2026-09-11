@@ -127,7 +127,7 @@ Viber / WhatsApp / Messenger / SMS / Sajt / (Telefon)
 | Transkripcija glasa | **Groq (Whisper Large v3)** — besplatno, bez kartice, do 2.000 poruka dnevno | Prevodi voice poruke u tekst pre nego što ih agent obradi; Claude zvuk ne prima (proveren Models API, 11.09.2026.) |
 | Multi-channel poruke | **Meta** (Messenger, Instagram, WhatsApp) — besplatno za odgovore u roku 24 h | Viber otpao (115 €/mes.), Infobip se plaća; vidi odluku o kanalima u odeljku 7 |
 | Web dashboard | **jednostavna web app** (isti backend, npr. Next.js) | Praćenje i upravljanje dok se sedi za računarom |
-| Hosting backend-a | **Koyeb** (besplatno, ne „zaspi"; odluka 11.09.2026. — Railway se plaća, Render zaspi kad nema saobraćaja) | WhatsApp/Viber/Meta traže javnu HTTPS adresu 24/7; kućni PC bi tražio dinamički DNS, port forwarding i SSL — nepotrebna komplikacija |
+| Hosting backend-a | **Render** (besplatno, bez kartice, 750 h mesečno) + besplatan „budilnik" (UptimeRobot / cron-job.org) koji ga poziva na 5–10 min, jer Render zaspi posle 15 min bez saobraćaja. Odluka 11.09.2026.: Koyeb je kupio Mistral i novi nalozi ne mogu da prave servis; Railway se plaća | WhatsApp/Viber/Meta traže javnu HTTPS adresu 24/7; kućni PC bi tražio dinamički DNS, port forwarding i SSL — nepotrebna komplikacija |
 
 **Napomena o postojećem Go serveru:** ništa se ne baca — logika za cene, rute
 i zone prelazi direktno u agent kao „alati", samo se piše u Node.js/TS umesto
@@ -241,10 +241,14 @@ jer ga vide mušterije; „Dispečer" ostaje interni naziv sistema.
 
 ### Gde stoji kod
 
-Kod je u privatnom GitHub repozitorijumu
-`https://github.com/Git-FilipPerlic/aj-uzmi-mi`. Bio je privatan jer su
-pravila baze bila otvorena; od 11.09.2026. su stegnuta, pa taj razlog više ne
-važi — da li prelazi u javni, odlučuje korisnik.
+Kod je u **javnom** GitHub repozitorijumu
+`https://github.com/Git-FilipPerlic/aj-uzmi-mi` (korisnik ga je otvorio
+11.09.2026.). Bio je privatan dok su pravila baze bila otvorena; od
+11.09.2026. su stegnuta. Pre otvaranja je proverena cela istorija: nijedan
+ključ ni tajni fajl nikad nije poslat. **Sve u repozitorijumu (i CLAUDE.md,
+APP_NOTES.md, cenovnik) vidi svako** — ključevi idu samo u `backend/.env` i u
+tajne na hostingu. Glavna grana je `main` (jednom je greškom preimenovana u
+`backend` i vraćena).
 
 `firebase_options.dart` i `google-services.json` **jesu** u repozitorijumu, i
 tako treba: bez njih se projekat ne može pokrenuti na drugom računaru, a ti

@@ -11,10 +11,13 @@ const putDoKljuca = fileURLToPath(
   new URL("../service-account.json", import.meta.url),
 );
 
+/** Render „Secret Files" (tajni fajl na hostingu) stavlja fajl ovde. */
+const RENDER_TAJNI_FAJL = "/etc/secrets/service-account.json";
+
 /**
  * Na računaru ključ je u fajlu. Na hostingu fajla nema (ne ide na GitHub),
- * pa tamo ključ stiže kao podešavanje FIREBASE_SERVICE_ACCOUNT — ceo sadržaj
- * service-account.json fajla.
+ * pa tamo ključ stiže ili kao podešavanje FIREBASE_SERVICE_ACCOUNT (ceo
+ * sadržaj service-account.json), ili kao Render tajni fajl.
  */
 function kljuc(): string | ServiceAccount {
   const izPodesavanja = process.env.FIREBASE_SERVICE_ACCOUNT?.trim();
@@ -25,9 +28,11 @@ function kljuc(): string | ServiceAccount {
       throw new Error("FIREBASE_SERVICE_ACCOUNT nije ispravan JSON — nalepi ceo sadržaj service-account.json.");
     }
   }
-  if (existsSync(putDoKljuca)) return putDoKljuca;
+  for (const put of [putDoKljuca, RENDER_TAJNI_FAJL]) {
+    if (existsSync(put)) return put;
+  }
   throw new Error(
-    `Nema Firebase ključa: ${putDoKljuca}\n` +
+    `Nema Firebase ključa: ni ${putDoKljuca}, ni ${RENDER_TAJNI_FAJL}, ni FIREBASE_SERVICE_ACCOUNT.\n` +
       "Preuzmi ga u Firebase konzoli (Project settings → Service accounts → " +
       "Generate new private key) i sačuvaj pod imenom service-account.json.",
   );
